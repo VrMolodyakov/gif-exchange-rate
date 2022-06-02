@@ -1,0 +1,18 @@
+openexchangerates:
+  name: penexchangerates
+  baseURL: https://openexchangerates.org/api
+  currentExchangeEndpoint: /latest.json?app_id
+  yesterdayExchangeURL: /api/historical/{date}.json?app_id
+  appId: 41feac8e262842caad58237987becfe6
+
+giphy:
+  name: giphy
+  baseURL: https://api.giphy.com/v1/gifs
+  randomEndpoint: /random?api_key
+  appKey: y5ZcnlAKsYjkcVwz5wXVypCbJGy3IAce
+  richTag: tag=rich
+  brokeTag: tag=broke
+  equalCurrencyTag: tag=i don't know
+  limit: limit=1
+  rating: rating=g
+
