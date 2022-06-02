@@ -47,7 +47,7 @@ public class ExchangeRateController {
 
     private GifUrlDto getGifUrlByRate(BigDecimal currencyRate){
 
-        LOGGER.info("the result of subtraction for currency rate {} ",currencyRate);
+        LOGGER.debug("the result of subtraction for currency rate {} ",currencyRate);
         if(currencyRate.compareTo(BigDecimal.ZERO) > 0){
             return gifClient.getRandomRichGifByExchangeRates();
         }else if(currencyRate.compareTo(BigDecimal.ZERO) < 0){

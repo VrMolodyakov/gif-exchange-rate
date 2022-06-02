@@ -17,3 +17,9 @@ giphy:
   limit: limit=1
   rating: rating=g
 
+spring:
+  profiles:
+    active: working
+  output:
+    ansi:
+      enabled: always

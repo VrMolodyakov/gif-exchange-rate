@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!--<include resource="org/springframework/boot/logging/logback/defaults.xml" />-->
+
+    <springProfile name="working">
+        <appender name="debugCA" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%date %green(%level) %yellow([%thread]) %cyan(%logger{10}) [%file : %line] %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <property name="LOG_FILE" value="C:/logs/SpringBoot.log" />
+        <appender name="debugRFA"
+                  class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_FILE}</file>
+            <encoder>
+                <pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %-5level %logger{5} - %msg%n
+                </pattern>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_FILE}-%d{dd-MM-yyyy}.log</fileNamePattern>
+            </rollingPolicy>
+        </appender>
+
+        <root>
+            <level value="DEBUG" />
+            <appender-ref ref="debugCA" />
+            <appender-ref ref="debugRFA" />
+        </root>
+    </springProfile>
+
+    <springProfile name="result">
+        <property name="LOG_FILE" value="C:/logs/SpringBoot.log" />
+        <appender name="RFA"
+                  class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_FILE}</file>
+            <encoder>
+                <pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %-5level %logger{36}
+                    -
+                    %msg%n
+                </pattern>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_FILE}-%d{dd-MM-yyyy}.%i.log</fileNamePattern>
+                <timeBasedFileNamingAndTriggeringPolicy
+                        class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                    <maxFileSize>5MB</maxFileSize>
+                </timeBasedFileNamingAndTriggeringPolicy>
+            </rollingPolicy>
+        </appender>
+
+        <root>
+            <level value="INFO" />
+            <appender-ref ref="RFA" />
+        </root>
+    </springProfile>
+</configuration>
