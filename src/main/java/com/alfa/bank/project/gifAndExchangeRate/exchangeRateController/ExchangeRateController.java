@@ -1,4 +1,4 @@
-package com.alfa.bank.project.gifAndExchangeRate.exchangeRateRest;
+package com.alfa.bank.project.gifAndExchangeRate.exchangeRateController;
 import com.alfa.bank.project.gifAndExchangeRate.dto.ExchangeRateDto;
 import com.alfa.bank.project.gifAndExchangeRate.dto.GifUrlDto;
 import com.alfa.bank.project.gifAndExchangeRate.feignServices.FeignExchangeRateClient;
@@ -33,14 +33,17 @@ public class ExchangeRateController {
         LOGGER.info("get rate for currency {} ",code);
         ExchangeRateDto currentRates = exchangeRateService.getExchangeRates();
         ExchangeRateDto yesterdayRates = exchangeRateService.getYesterdayExchangeRates(YESTERDAY);
+        System.out.println("isNull?" + currentRates);
         BigDecimal todayRate = currentRates.getRates().get(code);
-        BigDecimal yesterdayRate = yesterdayRates.getRates().get(code);
-        GifUrlDto rateGif = getGifUrlByRate(todayRate.subtract(yesterdayRate));
-        String gifUrl = rateGif.getUrl();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(URI.create(gifUrl));
-        return new ResponseEntity<Void>(headers, HttpStatus.TEMPORARY_REDIRECT);
-
+        if(currencyIsExist(currentRates,code)) {
+            BigDecimal yesterdayRate = yesterdayRates.getRates().get(code);
+            GifUrlDto rateGif = getGifUrlByRate(todayRate.subtract(yesterdayRate));
+            String gifUrl = rateGif.getUrl();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setLocation(URI.create(gifUrl));
+            return new ResponseEntity<Void>(headers, HttpStatus.TEMPORARY_REDIRECT);
+        }
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     private GifUrlDto getGifUrlByRate(BigDecimal currencyRate){
@@ -52,6 +55,10 @@ public class ExchangeRateController {
             return gifClient.getRandomBrokeGifByExchangeRates();
         }
         return gifClient.getRandomEqualCurrencyGifByExchangeRates();
+    }
+
+    private boolean currencyIsExist(ExchangeRateDto rateDto , String currencyCode){
+        return rateDto.getRates().containsKey(currencyCode);
     }
 }
 

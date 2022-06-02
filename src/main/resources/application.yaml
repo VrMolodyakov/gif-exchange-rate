@@ -4,6 +4,7 @@ openexchangerates:
   currentExchangeEndpoint: /latest.json?app_id
   yesterdayExchangeURL: /api/historical/{date}.json?app_id
   appId: 41feac8e262842caad58237987becfe6
+  base: USD
 
 giphy:
   name: giphy
