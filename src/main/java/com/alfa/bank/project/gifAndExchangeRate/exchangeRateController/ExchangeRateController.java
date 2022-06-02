@@ -35,19 +35,13 @@ public class ExchangeRateController {
         ExchangeRateDto currentRates = exchangeRateService.getExchangeRates();
         ExchangeRateDto yesterdayRates = exchangeRateService.getYesterdayExchangeRates(YESTERDAY);
         BigDecimal todayRate = currentRates.getRates().get(code);
-        if(currencyIsExist(currentRates,code)) {
-            BigDecimal yesterdayRate = yesterdayRates.getRates().get(code);
-            GifUrlDto rateGif = getGifUrlByRate(todayRate.subtract(yesterdayRate));
-            LOGGER.debug("today rate {} and yesterday rate {}",todayRate,yesterdayRate);
-            String gifUrl = rateGif.getUrl();
-            model.addAttribute("baseUrl",rateGif.getEmbedUrl());
-            model.addAttribute("embedUrl",rateGif.getEmbedUrl());
-            return "myHome";
-
-        }
-        return "error";
-        //return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-
+        BigDecimal yesterdayRate = yesterdayRates.getRates().get(code);
+        GifUrlDto rateGif = getGifUrlByRate(todayRate.subtract(yesterdayRate));
+        LOGGER.debug("today rate {} and yesterday rate {}",todayRate,yesterdayRate);
+        String gifUrl = rateGif.getUrl();
+        model.addAttribute("baseUrl",rateGif.getEmbedUrl());
+        model.addAttribute("embedUrl",rateGif.getEmbedUrl());
+        return "myHome";
     }
 
     private GifUrlDto getGifUrlByRate(BigDecimal currencyRate){
