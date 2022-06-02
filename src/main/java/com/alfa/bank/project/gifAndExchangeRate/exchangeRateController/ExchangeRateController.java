@@ -6,10 +6,12 @@ import com.alfa.bank.project.gifAndExchangeRate.feignServices.FeignGifClient;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.Banner;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -28,8 +30,7 @@ public class ExchangeRateController {
     private FeignGifClient gifClient;
 
     @RequestMapping(value = "/currency/{code}", method = GET)
-    public ResponseEntity<Void> getGifByExchangeRate(@PathVariable String code){
-
+    public String getGifByExchangeRate(@PathVariable String code, Model model){
         LOGGER.info("get rate for currency {} ",code);
         ExchangeRateDto currentRates = exchangeRateService.getExchangeRates();
         ExchangeRateDto yesterdayRates = exchangeRateService.getYesterdayExchangeRates(YESTERDAY);
@@ -37,16 +38,19 @@ public class ExchangeRateController {
         if(currencyIsExist(currentRates,code)) {
             BigDecimal yesterdayRate = yesterdayRates.getRates().get(code);
             GifUrlDto rateGif = getGifUrlByRate(todayRate.subtract(yesterdayRate));
+            LOGGER.debug("today rate {} and yesterday rate {}",todayRate,yesterdayRate);
             String gifUrl = rateGif.getUrl();
-            HttpHeaders headers = new HttpHeaders();
-            headers.setLocation(URI.create(gifUrl));
-            return new ResponseEntity<Void>(headers, HttpStatus.TEMPORARY_REDIRECT);
+            model.addAttribute("baseUrl",rateGif.getEmbedUrl());
+            model.addAttribute("embedUrl",rateGif.getEmbedUrl());
+            return "myHome";
+
         }
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        return "error";
+        //return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
     }
 
     private GifUrlDto getGifUrlByRate(BigDecimal currencyRate){
-
         LOGGER.debug("the result of subtraction for currency rate {} ",currencyRate);
         if(currencyRate.compareTo(BigDecimal.ZERO) > 0){
             return gifClient.getRandomRichGifByExchangeRates();
