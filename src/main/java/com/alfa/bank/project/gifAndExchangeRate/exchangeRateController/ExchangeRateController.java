@@ -33,7 +33,6 @@ public class ExchangeRateController {
         LOGGER.info("get rate for currency {} ",code);
         ExchangeRateDto currentRates = exchangeRateService.getExchangeRates();
         ExchangeRateDto yesterdayRates = exchangeRateService.getYesterdayExchangeRates(YESTERDAY);
-        System.out.println("isNull?" + currentRates);
         BigDecimal todayRate = currentRates.getRates().get(code);
         if(currencyIsExist(currentRates,code)) {
             BigDecimal yesterdayRate = yesterdayRates.getRates().get(code);
