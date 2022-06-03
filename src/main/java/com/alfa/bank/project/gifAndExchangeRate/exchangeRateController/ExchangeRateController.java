@@ -1,6 +1,7 @@
 package com.alfa.bank.project.gifAndExchangeRate.exchangeRateController;
 import com.alfa.bank.project.gifAndExchangeRate.dto.ExchangeRateDto;
 import com.alfa.bank.project.gifAndExchangeRate.dto.GifUrlDto;
+import com.alfa.bank.project.gifAndExchangeRate.exchangeServices.ExchangeService;
 import com.alfa.bank.project.gifAndExchangeRate.feignServices.FeignExchangeRateClient;
 import com.alfa.bank.project.gifAndExchangeRate.feignServices.FeignGifClient;
 import lombok.AllArgsConstructor;
@@ -15,7 +16,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.time.LocalDate;
+import java.time.*;
+import java.util.TimeZone;
 
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
@@ -25,19 +27,18 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 public class ExchangeRateController {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ExchangeRateController.class);
-    private final static String YESTERDAY = LocalDate.now().minusDays(1L).toString();
-    private FeignExchangeRateClient exchangeRateService;
     private FeignGifClient gifClient;
+    private ExchangeService exchangeService;
 
     @RequestMapping(value = "/currency/{code}", method = GET)
     public String getGifByExchangeRate(@PathVariable String code, Model model){
         LOGGER.info("get rate for currency {} ",code);
-        ExchangeRateDto currentRates = exchangeRateService.getExchangeRates();
-        ExchangeRateDto yesterdayRates = exchangeRateService.getYesterdayExchangeRates(YESTERDAY);
+        ExchangeRateDto currentRates = exchangeService.getCurrentExchangeRate(LocalDateTime.now(ZoneOffset.UTC));
+        ExchangeRateDto yesterdayRates = exchangeService.getYesterdayExchangeRate(LocalDateTime.now(ZoneOffset.UTC));
         BigDecimal todayRate = currentRates.getRates().get(code);
         BigDecimal yesterdayRate = yesterdayRates.getRates().get(code);
         GifUrlDto rateGif = getGifUrlByRate(todayRate.subtract(yesterdayRate));
-        LOGGER.debug("today rate {} and yesterday rate {}",todayRate,yesterdayRate);
+        LOGGER.info("today rate {} and yesterday rate {}",todayRate,yesterdayRate);
         String gifUrl = rateGif.getUrl();
         model.addAttribute("baseUrl",rateGif.getEmbedUrl());
         model.addAttribute("embedUrl",rateGif.getEmbedUrl());

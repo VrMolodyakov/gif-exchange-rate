@@ -11,6 +11,7 @@ import java.util.Map;
 @NoArgsConstructor
 @Getter
 @Setter
+@ToString
 public class ExchangeRateDto {
 
     @JsonProperty("disclaimer")
@@ -19,7 +20,7 @@ public class ExchangeRateDto {
     private String license;
     @JsonFormat(pattern="yyyy-MM-dd")
     @JsonProperty("timestamp")
-    private Date timestamp;
+    private Long timestamp;
     @JsonProperty("base")
     private String base;
     @JsonProperty("rates")
