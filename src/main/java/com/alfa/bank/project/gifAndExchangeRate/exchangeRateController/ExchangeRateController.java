@@ -1,23 +1,21 @@
 package com.alfa.bank.project.gifAndExchangeRate.exchangeRateController;
-import com.alfa.bank.project.gifAndExchangeRate.dto.ExchangeRateDto;
+import com.alfa.bank.project.gifAndExchangeRate.dto.CurrencyRateDto;
 import com.alfa.bank.project.gifAndExchangeRate.dto.GifUrlDto;
 import com.alfa.bank.project.gifAndExchangeRate.exchangeServices.ExchangeService;
-import com.alfa.bank.project.gifAndExchangeRate.feignServices.FeignExchangeRateClient;
 import com.alfa.bank.project.gifAndExchangeRate.feignServices.FeignGifClient;
+import com.alfa.bank.project.gifAndExchangeRate.gifService.GifService;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.Banner;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+
 import java.math.BigDecimal;
-import java.net.URI;
 import java.time.*;
-import java.util.TimeZone;
+import java.util.Optional;
 
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
@@ -27,37 +25,24 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 public class ExchangeRateController {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ExchangeRateController.class);
-    private FeignGifClient gifClient;
-    private ExchangeService exchangeService;
+    private final ExchangeService exchangeService;
+    private final GifService GifByCurrencyExchangeRate;
 
     @RequestMapping(value = "/currency/{code}", method = GET)
     public String getGifByExchangeRate(@PathVariable String code, Model model){
         LOGGER.info("get rate for currency {} ",code);
-        ExchangeRateDto currentRates = exchangeService.getCurrentExchangeRate(LocalDateTime.now(ZoneOffset.UTC));
-        ExchangeRateDto yesterdayRates = exchangeService.getYesterdayExchangeRate(LocalDateTime.now(ZoneOffset.UTC));
-        BigDecimal todayRate = currentRates.getRates().get(code);
-        BigDecimal yesterdayRate = yesterdayRates.getRates().get(code);
-        GifUrlDto rateGif = getGifUrlByRate(todayRate.subtract(yesterdayRate));
-        LOGGER.info("today rate {} and yesterday rate {}",todayRate,yesterdayRate);
+        Optional<BigDecimal> exchangeRateDifference = exchangeService.getTodayAndYesterdayCurrencyRate(code);
+        if(exchangeRateDifference.isEmpty()){
+            throw new HttpClientErrorException(HttpStatus.NOT_FOUND);
+        }
+        GifUrlDto rateGif = GifByCurrencyExchangeRate.getGifUrlByRate(exchangeRateDifference.get());
         String gifUrl = rateGif.getUrl();
         model.addAttribute("baseUrl",rateGif.getEmbedUrl());
         model.addAttribute("embedUrl",rateGif.getEmbedUrl());
-        return "myHome";
+        return "gifPage";
     }
 
-    private GifUrlDto getGifUrlByRate(BigDecimal currencyRate){
-        LOGGER.debug("the result of subtraction for currency rate {} ",currencyRate);
-        if(currencyRate.compareTo(BigDecimal.ZERO) > 0){
-            return gifClient.getRandomRichGifByExchangeRates();
-        }else if(currencyRate.compareTo(BigDecimal.ZERO) < 0){
-            return gifClient.getRandomBrokeGifByExchangeRates();
-        }
-        return gifClient.getRandomEqualCurrencyGifByExchangeRates();
-    }
 
-    private boolean currencyIsExist(ExchangeRateDto rateDto , String currencyCode){
-        return rateDto.getRates().containsKey(currencyCode);
-    }
 }
 
 

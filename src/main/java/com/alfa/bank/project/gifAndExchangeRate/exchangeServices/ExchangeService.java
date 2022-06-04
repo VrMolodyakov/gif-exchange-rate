@@ -1,10 +1,8 @@
 package com.alfa.bank.project.gifAndExchangeRate.exchangeServices;
 
-import com.alfa.bank.project.gifAndExchangeRate.dto.ExchangeRateDto;
-
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.util.Optional;
 
 public interface ExchangeService {
-    ExchangeRateDto getCurrentExchangeRate(LocalDateTime currentTime);
-    ExchangeRateDto getYesterdayExchangeRate(LocalDateTime currentTime);
+    Optional<BigDecimal> getTodayAndYesterdayCurrencyRate(String code);
 }

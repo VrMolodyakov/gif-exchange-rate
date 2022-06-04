@@ -12,7 +12,7 @@ import java.util.Map;
 @Getter
 @Setter
 @ToString
-public class ExchangeRateDto {
+public class CurrencyRateDto {
 
     @JsonProperty("disclaimer")
     private String disclaimer;
