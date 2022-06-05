@@ -36,7 +36,7 @@ public class ExchangeServiceImpl implements ExchangeService {
         if(codeIsExist(currentRates,code)) {
             BigDecimal todayRate = currentRates.getRates().get(code);
             BigDecimal yesterdayRate = yesterdayRates.getRates().get(code);
-            LOGGER.debug("today rate {} and yesterday rate {}", todayRate, yesterdayRate);
+            LOGGER.info("today rate {} and yesterday rate {}", todayRate, yesterdayRate);
             return Optional.of(todayRate.subtract(yesterdayRate));
         }
         return Optional.empty();

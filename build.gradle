@@ -1,7 +1,7 @@
 plugins {
 	id 'org.springframework.boot' version '2.7.0'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-	id 'java'
+	id 'java-library'
 }
 
 group = 'com.alfa.bank.project'
@@ -21,9 +21,24 @@ task customFatJar(type: Jar) {
 	manifest {
 		attributes 'Main-Class': 'com.alfa.bank.project.gifAndExchangeRate.GifAndExchangeRateApplication'
 	}
-	from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+	from { configurations.implementation.collect { it.isDirectory() ? it : zipTree(it) } }
 	with jar
 }
+
+jar {
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	manifest {
+		attributes 'Main-Class': 'com.alfa.bank.project.gifAndExchangeRate.GifAndExchangeRateApplication'
+	}
+
+	from {
+		configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+	}
+	exclude "META-INF/*.SF"
+	exclude "META-INF/*.DSA"
+	exclude "META-INF/*.RSA"
+}
+
 ext {
 	set('springCloudVersion', "2021.0.3")
 }

@@ -47,7 +47,7 @@ public class CurrencyControllerTest {
                 .willReturn(richGifDto);
 
         MockHttpServletResponse response = mvc.perform(
-                get("/currency/" + existCurrencyCode).accept(MediaType.TEXT_HTML)).andReturn().getResponse();
+                get("/currencies/" + existCurrencyCode).accept(MediaType.TEXT_HTML)).andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
     }
@@ -62,7 +62,7 @@ public class CurrencyControllerTest {
                 .willReturn(richGifDto);
 
         MockHttpServletResponse response = mvc.perform(
-                get("/currency/" + notExistCurrencyCode).accept(MediaType.TEXT_HTML)).andReturn().getResponse();
+                get("/currencies/" + notExistCurrencyCode).accept(MediaType.TEXT_HTML)).andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
     }

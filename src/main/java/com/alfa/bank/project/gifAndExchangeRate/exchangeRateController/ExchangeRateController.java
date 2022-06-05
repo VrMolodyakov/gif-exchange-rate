@@ -23,7 +23,7 @@ public class ExchangeRateController {
     private final ExchangeService exchangeService;
     private final GifService GifByCurrencyExchangeRate;
 
-    @RequestMapping(value = "/currency/{code}", method = GET)
+    @RequestMapping(value = "/currencies/{code}", method = GET)
     public String getGifByExchangeRate(@PathVariable String code, Model model){
         LOGGER.info("get rate for currency {} ",code);
         Optional<BigDecimal> exchangeRateDifference = exchangeService.getTodayAndYesterdayCurrencyRate(code);

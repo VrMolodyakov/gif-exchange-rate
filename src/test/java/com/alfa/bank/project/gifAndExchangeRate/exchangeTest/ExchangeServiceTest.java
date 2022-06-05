@@ -107,7 +107,7 @@ public class ExchangeServiceTest {
     public void shouldCallFeignClientOneTimeOnFirstAccessWithMultipleThreads() throws Exception{
         given(FeignExchangeRatesClient.getExchangeRates()).willReturn(todayThreadRates);
         given(FeignExchangeRatesClient.getYesterdayExchangeRates(any())).willReturn(yesterdayThreadRates);
-        final var latch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(1);
 
         final Runnable runnable = () -> {
             try {

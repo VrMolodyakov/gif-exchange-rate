@@ -16,7 +16,7 @@ giphy:
 
 spring:
   profiles:
-    active: result
+    active: working
   output:
     ansi:
       enabled: always
