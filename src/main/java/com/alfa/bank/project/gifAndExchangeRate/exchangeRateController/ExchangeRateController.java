@@ -1,20 +1,15 @@
 package com.alfa.bank.project.gifAndExchangeRate.exchangeRateController;
-import com.alfa.bank.project.gifAndExchangeRate.dto.CurrencyRateDto;
 import com.alfa.bank.project.gifAndExchangeRate.dto.GifUrlDto;
 import com.alfa.bank.project.gifAndExchangeRate.exchangeServices.ExchangeService;
-import com.alfa.bank.project.gifAndExchangeRate.feignServices.FeignGifClient;
 import com.alfa.bank.project.gifAndExchangeRate.gifService.GifService;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
-
 import java.math.BigDecimal;
-import java.time.*;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -33,7 +28,9 @@ public class ExchangeRateController {
         LOGGER.info("get rate for currency {} ",code);
         Optional<BigDecimal> exchangeRateDifference = exchangeService.getTodayAndYesterdayCurrencyRate(code);
         if(exchangeRateDifference.isEmpty()){
-            throw new HttpClientErrorException(HttpStatus.NOT_FOUND);
+            List<String> codes = exchangeService.geAllCurrencyCodes();
+            model.addAttribute("codes",codes);
+            return "error";
         }
         GifUrlDto rateGif = GifByCurrencyExchangeRate.getGifUrlByRate(exchangeRateDifference.get());
         String gifUrl = rateGif.getUrl();

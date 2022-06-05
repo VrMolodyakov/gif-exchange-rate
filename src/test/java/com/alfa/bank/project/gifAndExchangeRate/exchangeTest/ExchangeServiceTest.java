@@ -1,5 +1,6 @@
 package com.alfa.bank.project.gifAndExchangeRate.exchangeTest;
 
+import com.alfa.bank.project.gifAndExchangeRate.dto.CurrenciesDto;
 import com.alfa.bank.project.gifAndExchangeRate.dto.CurrencyRateDto;
 import com.alfa.bank.project.gifAndExchangeRate.exchangeServices.ExchangeService;
 import com.alfa.bank.project.gifAndExchangeRate.feignServices.FeignExchangeRateClient;
@@ -8,15 +9,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.math.BigDecimal;
 import java.time.*;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
@@ -24,14 +26,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class ExchangeServiceTest {
 
     @Autowired
     private ExchangeService currencyExchangeRateService;
     @MockBean
     private FeignExchangeRateClient FeignExchangeRatesClient;
-
     private CurrencyRateDto currentRates;
     private CurrencyRateDto yesterdayRates;
     private CurrencyRateDto todayThreadRates;
@@ -67,6 +68,8 @@ public class ExchangeServiceTest {
         long timestampYesterday = yesterdayThreadDate.atZone(zoneId).toEpochSecond();
         yesterdayThreadRates = new CurrencyRateDto("4","4",timestampYesterday,CODE,threadCurrencyMap);
     }
+
+
 
     @Test
     public void currencyExchangeRateShouldIncreaseAndReturn1(){
@@ -130,5 +133,43 @@ public class ExchangeServiceTest {
         verify(FeignExchangeRatesClient).getYesterdayExchangeRates(any());
     }
 
+    @Test
+    public void testing(){
+        List<String> codes = List.of("first","second");
+        CurrenciesDto currenciesDto = new CurrenciesDto(codes);
+        given(FeignExchangeRatesClient.getCodes()).willReturn(currenciesDto);
+        List<String> codesFromService = currencyExchangeRateService.geAllCurrencyCodes();
+        assertEquals(codes, codesFromService);
+    }
+
+    @Test
+    public void shouldCallFeignClientGetAllCodesOneTimeWithMultipleThreads() throws Exception {
+        List<String> codes = List.of("first", "second");
+        CurrenciesDto currenciesDto = new CurrenciesDto(codes);
+        given(FeignExchangeRatesClient.getCodes()).willReturn(currenciesDto);
+        CountDownLatch latch = new CountDownLatch(1);
+
+        final Runnable runnable = () -> {
+            try {
+                latch.await();
+                List<String> codesFromService = currencyExchangeRateService.geAllCurrencyCodes();
+            } catch (InterruptedException ex) {
+                throw new AssertionError(ex);
+            }
+        };
+
+        final Thread[] threads = Stream.generate(() -> new Thread(runnable))
+                .limit(5)
+                .peek(Thread::start)
+                .toArray(Thread[]::new);
+
+        latch.countDown();
+
+        for (Thread thread : threads) {
+            thread.join();
+        }
+
+        verify(FeignExchangeRatesClient).getCodes();
+    }
 
 }

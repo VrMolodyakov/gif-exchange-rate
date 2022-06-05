@@ -1,14 +1,14 @@
 package com.alfa.bank.project.gifAndExchangeRate.exchangeServices;
-
+import com.alfa.bank.project.gifAndExchangeRate.dto.CurrenciesDto;
 import com.alfa.bank.project.gifAndExchangeRate.dto.CurrencyRateDto;
 import com.alfa.bank.project.gifAndExchangeRate.feignServices.FeignExchangeRateClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.time.*;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -21,11 +21,12 @@ public class ExchangeServiceImpl implements ExchangeService {
     private final static Logger LOGGER = LoggerFactory.getLogger(ExchangeServiceImpl.class);
     private CurrencyRateDto currentRates;
     private CurrencyRateDto yesterdayRates;
+    private CurrenciesDto currencyCodes;
     private final ReadWriteLock todayCallLock = new ReentrantReadWriteLock();
     private final ReadWriteLock yesterdayCallLock = new ReentrantReadWriteLock();
+    private final ReadWriteLock allCurrencyCodesLock = new ReentrantReadWriteLock();
     @Autowired
     private FeignExchangeRateClient exchangeRateService;
-
 
     @Override
     public Optional<BigDecimal> getTodayAndYesterdayCurrencyRate(String code) {
@@ -35,14 +36,26 @@ public class ExchangeServiceImpl implements ExchangeService {
         if(codeIsExist(currentRates,code)) {
             BigDecimal todayRate = currentRates.getRates().get(code);
             BigDecimal yesterdayRate = yesterdayRates.getRates().get(code);
-            LOGGER.info("today rate {} and yesterday rate {}", todayRate, yesterdayRate);
+            LOGGER.debug("today rate {} and yesterday rate {}", todayRate, yesterdayRate);
             return Optional.of(todayRate.subtract(yesterdayRate));
         }
         return Optional.empty();
     }
 
+    @Override
+    public List<String> geAllCurrencyCodes() {
+        Predicate<CurrenciesDto> codesIsNull = codes -> {
+            if (codes == null ) {
+                return true;
+            }
+            return false;
+        };
+        Supplier<CurrenciesDto> allCurrencyCodesSupplier = () -> exchangeRateService.getCodes();
+        return updateCurrencyCodesIf(codesIsNull,allCurrencyCodesSupplier);
+    }
+
     public CurrencyRateDto getCurrentExchangeRate(LocalDateTime currentTime) {
-        LOGGER.info("call today rates with time {}",currentTime);
+        LOGGER.debug("call today rates with time {}",currentTime);
         Predicate<LocalDateTime> rateNullOrOld = time -> {
             if (currentRates == null ) {
                 return true;
@@ -51,9 +64,8 @@ public class ExchangeServiceImpl implements ExchangeService {
                     LocalDateTime.ofInstant(Instant.ofEpochSecond(currentRates.getTimestamp()), ZoneOffset.UTC);
             Duration timeBetween = Duration.between(lastUpdateTime, currentTime);
             long hoursBetween = timeBetween.minusDays(timeBetween.toDays()).toHoursPart();
-            LOGGER.info("time between {} for current",hoursBetween);
-            if ( hoursBetween != 0 ) {
-                LOGGER.info("return true for current");
+            LOGGER.debug("time between {} for current",hoursBetween);
+            if (hoursBetween != 0 ) {
                 return true;
             }
             return false;
@@ -64,7 +76,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 
 
     public CurrencyRateDto getYesterdayExchangeRate(LocalDateTime currentTime) {
-        LOGGER.info("call yesterday rates with time {}",currentTime);
+        LOGGER.debug("call yesterday rates with time {}",currentTime);
         String yesterday = LocalDate.now(ZoneOffset.UTC).minusDays(1L).toString();
         Predicate<LocalDateTime> yesterdayRateNullOrOld = time -> {
             if(yesterdayRates == null) {
@@ -74,6 +86,7 @@ public class ExchangeServiceImpl implements ExchangeService {
                     .ofInstant(Instant.ofEpochSecond(yesterdayRates.getTimestamp()), ZoneOffset.UTC);
             Duration timeBetween = Duration.between(lastUpdateTime,currentTime.minusDays(1L));
             long daysBetween = timeBetween.toDays();
+            LOGGER.debug("days between yesterday {}",daysBetween);
             if(daysBetween != 0){
                 return true;
             }
@@ -86,7 +99,6 @@ public class ExchangeServiceImpl implements ExchangeService {
     private CurrencyRateDto updateCurrentRateIf(Predicate<LocalDateTime> condition,
                                                 Supplier<CurrencyRateDto> currencyRateRetriever,
                                                 LocalDateTime currentTime){
-        LOGGER.info("inside current update first time");
         todayCallLock.readLock().lock();
         try {
             if(!condition.test(currentTime)){
@@ -97,9 +109,8 @@ public class ExchangeServiceImpl implements ExchangeService {
         }
         todayCallLock.writeLock().lock();
         try {
-            LOGGER.info("unsuccessful request for current ");
             if(condition.test(currentTime)){
-                LOGGER.info("current rates was refreshed");
+                LOGGER.debug("current rates was refreshed");
                 currentRates = currencyRateRetriever.get();
             }
             return currentRates;
@@ -111,7 +122,6 @@ public class ExchangeServiceImpl implements ExchangeService {
     private CurrencyRateDto updateYesterdayRateIf(Predicate<LocalDateTime> condition,
                                                   Supplier<CurrencyRateDto> currencyRateRetriever,
                                                   LocalDateTime currentTime){
-        LOGGER.info("inside yesterday update first time");
         yesterdayCallLock.readLock().lock();
         try {
             if(!condition.test(currentTime)){
@@ -122,23 +132,39 @@ public class ExchangeServiceImpl implements ExchangeService {
         }
         yesterdayCallLock.writeLock().lock();
         try {
-            LOGGER.info("unsuccessful request for yesterday ");
             if(condition.test(currentTime)){
-                LOGGER.info("yesterday rates was refreshed");
+                LOGGER.debug("yesterday rates was refreshed");
                 yesterdayRates = currencyRateRetriever.get();
             }
             return yesterdayRates;
         }finally {
             yesterdayCallLock.writeLock().unlock();
         }
+    }
 
-
+    private List<String> updateCurrencyCodesIf(Predicate<CurrenciesDto> condition,
+                                               Supplier<CurrenciesDto> currencyRateRetriever){
+        allCurrencyCodesLock.readLock().lock();
+        try {
+            if(!condition.test(currencyCodes)){
+                return currencyCodes.getCurrencies();
+            }
+        }finally {
+            allCurrencyCodesLock.readLock().unlock();
+        }
+        allCurrencyCodesLock.writeLock().lock();
+        try {
+            if(condition.test(currencyCodes)){
+                LOGGER.debug("refresh currency codes list");
+                currencyCodes = currencyRateRetriever.get();
+            }
+            return currencyCodes.getCurrencies();
+        }finally {
+            allCurrencyCodesLock.writeLock().unlock();
+        }
     }
 
     private boolean codeIsExist(CurrencyRateDto currencyRateDto, String code){
         return currencyRateDto.getRates().containsKey(code);
     }
-
-
-
 }

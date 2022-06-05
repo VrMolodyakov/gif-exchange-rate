@@ -3,7 +3,6 @@ import com.alfa.bank.project.gifAndExchangeRate.dto.GifUrlDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 
-
 @FeignClient(name = "${giphy.name}", url =  "${giphy.baseURL}")
 public interface FeignGifClient {
 

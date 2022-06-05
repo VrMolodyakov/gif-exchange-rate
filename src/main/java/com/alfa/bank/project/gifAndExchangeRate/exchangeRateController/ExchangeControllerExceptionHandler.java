@@ -12,10 +12,10 @@ public class ExchangeControllerExceptionHandler {
 
     private static Logger LOGGER = LoggerFactory.getLogger(ExchangeControllerExceptionHandler.class);
 
-    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
-    public String notFoundHandler() {
-        LOGGER.warn("Currency not found. HTTP 500 returned.");
+    public String notFoundHandler(Exception ex) {
+        LOGGER.warn("HTTP 500 returned. {} ",ex);
         return "error";
     }
 }

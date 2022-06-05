@@ -1,6 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-<h1>wrong currency code! </h1>
+<table class = "codes">
+    <thead>
+    <tr>
+        <th> Currency code was wrong. </th>
+        <th> Available codes: </th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="code : ${codes}">
+        <td><span th:text="${code}"> code </span></td>
+    </tr>
+    </tbody>
+</table>
 </body>
 </html>

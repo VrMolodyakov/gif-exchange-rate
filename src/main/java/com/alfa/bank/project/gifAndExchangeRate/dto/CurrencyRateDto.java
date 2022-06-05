@@ -2,16 +2,13 @@ package com.alfa.bank.project.gifAndExchangeRate.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
-
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.Map;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString
 public class CurrencyRateDto {
 
     @JsonProperty("disclaimer")

@@ -2,23 +2,15 @@ package com.alfa.bank.project.gifAndExchangeRate.gifTest;
 
 import com.alfa.bank.project.gifAndExchangeRate.dto.CurrencyRateDto;
 import com.alfa.bank.project.gifAndExchangeRate.dto.GifUrlDto;
-import com.alfa.bank.project.gifAndExchangeRate.exchangeServices.ExchangeService;
-import com.alfa.bank.project.gifAndExchangeRate.feignServices.FeignExchangeRateClient;
 import com.alfa.bank.project.gifAndExchangeRate.feignServices.FeignGifClient;
 import com.alfa.bank.project.gifAndExchangeRate.gifService.GifService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 @SpringBootTest
